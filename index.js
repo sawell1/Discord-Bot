@@ -31,9 +31,12 @@ exec('node backend/deployCommands.js', (err, stdout, stderr) => {
 client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
 	
-	// Steam Deck Scheduler starten
-	const steamDeckScheduler = new SteamDeckScheduler(client);
-	steamDeckScheduler.start("09:00"); // Täglich um 9:00 Uhr prüfen
+	// Steam Deck Scheduler temporär deaktiviert für Debugging
+	console.log('🎮 Steam Deck Scheduler ist temporär deaktiviert (Debug Mode)');
+	
+	// TODO: Scheduler wieder aktivieren wenn Commands funktionieren
+	// const steamDeckScheduler = new SteamDeckScheduler(client);
+	// steamDeckScheduler.start("09:00");
 });
 
 // Log in to Discord with your client's token
