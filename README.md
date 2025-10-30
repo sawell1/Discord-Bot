@@ -23,12 +23,7 @@ This fork maintains full compatibility with the original bot while adding new fu
 - **Real-time manual checking** with `/steamdeck` command
 - **Configurable Discord notifications** via channel setup
 
-### 📺 Media Server Integration
-- **Plex & Jellyfin management** commands
-- **Live streaming server** setup and control
-- **Container-based media services** with easy deployment
-
-### 🔧 Enhanced Stability
+###  Enhanced Stability
 - **Improved error handling** and logging
 - **Robust timeout protection** for external API calls
 - **Extended configuration options** for better customization
@@ -52,7 +47,7 @@ Setup is pretty straightforward.
 ### Option 1: Enhanced Version (Docker - Recommended)
 
 ```bash
-# Enhanced version with Steam Deck monitoring and media features
+# Enhanced version with Steam Deck monitoring
 docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name server-bot \
 -e DISCORD_TOKEN=your_token_here \
 -e DISCORD_CLIENT_ID=your_client_id_here \
@@ -109,14 +104,6 @@ The program will build an invite link with the correct permissions and put it in
 - **`/steamdeck-config channel #channel`** - Set Discord channel for automatic notifications
 - **`/steamdeck-config status`** - View automatic monitoring system status
 
-### **📺 Media Server Commands (Enhanced Features):**
-- **`/media status`** - Show status of media servers (Plex, Jellyfin)
-- **`/media start [service]`** - Start media server containers
-- **`/media stop [service]`** - Stop media server containers
-- **`/stream setup`** - Setup live streaming server (RTMP/HLS)
-- **`/stream info`** - Show streaming configuration and URLs
-- **`/stream viewers`** - Display current streaming statistics
-
 ---
 
 ## 🔧 Environment Variables
@@ -145,14 +132,14 @@ The program will build an invite link with the correct permissions and put it in
 | Repository | Purpose | Maintained by |
 |------------|---------|---------------|
 | [`allenrkeen/server-bot`](https://hub.docker.com/r/allenrkeen/server-bot) | Original core functionality | allenrkeen |
-| [`sawell1/discord-bot`](https://hub.docker.com/r/sawell1/discord-bot) | Enhanced with Steam Deck & Media features | sawell1 |
+| [`sawell1/discord-bot`](https://hub.docker.com/r/sawell1/discord-bot) | Enhanced with Steam Deck features | sawell1 |
 
 ---
 
 ## 🤝 Contributing
 
 - **For core Docker management features:** Please contribute to the [original repository](https://github.com/allenrkeen/server-bot) by allenrkeen
-- **For enhanced features (Steam Deck, Media):** Contribute to this [enhanced fork](https://github.com/sawell1/Discord-Bot)
+- **For enhanced features (Steam Deck monitoring):** Contribute to this [enhanced fork](https://github.com/sawell1/Discord-Bot)
 
 ---
 
