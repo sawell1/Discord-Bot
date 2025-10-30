@@ -7,6 +7,9 @@ const clientID = process.env.DISCORD_CLIENT_ID;
 // Require the necessary discord.js classes
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 
+// Steam Deck Scheduler importieren
+const SteamDeckScheduler = require('./services/steamDeckScheduler.js');
+
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -27,6 +30,10 @@ exec('node backend/deployCommands.js', (err, stdout, stderr) => {
 // When the client is ready, run this code
 client.once(Events.ClientReady, c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
+	
+	// Steam Deck Scheduler starten
+	const steamDeckScheduler = new SteamDeckScheduler(client);
+	steamDeckScheduler.start("09:00"); // Täglich um 9:00 Uhr prüfen
 });
 
 // Log in to Discord with your client's token
