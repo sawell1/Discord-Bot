@@ -6,27 +6,77 @@
 
 const { EmbedBuilder } = require('discord.js');
 const { checkSteamDeckOffer } = require('../commands/steamDeck.js');
+const fs = require('fs');
+const path = require('path');
 
 class SteamDeckScheduler {
     constructor(client) {
         this.client = client;
-        this.channelId = process.env.STEAM_DECK_CHANNEL_ID; // Channel ID für Benachrichtigungen
+        this.configPath = path.join(__dirname, '../config/steamDeckConfig.json');
+        this.config = this.loadConfig();
+        this.channelId = process.env.STEAM_DECK_CHANNEL_ID || this.config.channelId;
         this.lastKnownState = null; // Speichert den letzten bekannten Status
         this.checkInterval = null;
+        this.logger = client.logger; // Discord Logger
+    }
+
+    /**
+     * Lädt die Konfiguration aus der JSON-Datei
+     */
+    loadConfig() {
+        try {
+            if (fs.existsSync(this.configPath)) {
+                const configData = fs.readFileSync(this.configPath, 'utf8');
+                return JSON.parse(configData);
+            }
+        } catch (error) {
+            console.error('❌ Fehler beim Laden der Steam Deck Konfiguration:', error);
+        }
+        
+        // Standard-Konfiguration zurückgeben falls Datei nicht existiert
+        return {
+            checkTime: "09:00",
+            channelId: null,
+            logChannelId: null,
+            lastCheck: null,
+            isActive: true,
+            pingUsers: [],
+            pingRoles: [],
+            onlyPingOnSale: true
+        };
+    }
+
+    /**
+     * Speichert die Konfiguration in die JSON-Datei
+     */
+    saveConfig() {
+        try {
+            const configDir = path.dirname(this.configPath);
+            if (!fs.existsSync(configDir)) {
+                fs.mkdirSync(configDir, { recursive: true });
+            }
+            fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+        } catch (error) {
+            console.error('❌ Fehler beim Speichern der Steam Deck Konfiguration:', error);
+        }
     }
 
     /**
      * Startet den täglichen Check
-     * @param {string} time - Zeit im Format "HH:MM" (z.B. "09:00")
+     * @param {string} time - Zeit im Format "HH:MM" (z.B. "09:00") - optional, wird aus Config gelesen
      */
-    start(time = "09:00") {
-        console.log(`🎮 Steam Deck Scheduler gestartet - tägliche Überprüfung um ${time}`);
+    start(time = null) {
+        const checkTime = time || this.config.checkTime || "09:00";
+        this.config.checkTime = checkTime;
+        this.saveConfig();
+        
+        console.log(`🎮 Steam Deck Scheduler gestartet - tägliche Überprüfung um ${checkTime}`);
         
         // Sofort einmal prüfen beim Start
         this.performCheck();
         
         // Dann täglich zur angegebenen Zeit
-        this.scheduleDaily(time);
+        this.scheduleDaily(checkTime);
     }
 
     /**
@@ -63,12 +113,24 @@ class SteamDeckScheduler {
     async performCheck() {
         try {
             console.log('🔍 Überprüfe Steam Deck Status...');
+            if (this.logger) {
+                await this.logger.info('Steam Deck Check', 'Automatische Überprüfung gestartet...');
+            }
             
             const steamDeckInfo = await checkSteamDeckOffer();
             const currentState = steamDeckInfo.onSale;
             
             // Prüfe ob sich der Status geändert hat
             const statusChanged = this.lastKnownState !== null && this.lastKnownState !== currentState;
+            
+            // Discord Log für Steam Deck Check
+            if (this.logger) {
+                await this.logger.logSteamDeckCheck(currentState, statusChanged, {
+                    'Verfügbarkeit': steamDeckInfo.availability || 'Unbekannt',
+                    'Rabatt': steamDeckInfo.discount || 'Keiner',
+                    'Preis-Status': steamDeckInfo.status || 'Unbekannt'
+                });
+            }
             
             // Sende Benachrichtigung wenn:
             // 1. Status hat sich geändert ODER
@@ -79,10 +141,20 @@ class SteamDeckScheduler {
             
             this.lastKnownState = currentState;
             
+            // Aktualisiere lastCheck Zeit in der Config
+            this.config.lastCheck = new Date().toLocaleString('de-DE');
+            this.saveConfig();
+            
             console.log(`✅ Steam Deck Check abgeschlossen - Im Angebot: ${currentState ? 'JA' : 'NEIN'}`);
             
         } catch (error) {
             console.error('❌ Fehler beim automatischen Steam Deck Check:', error);
+            
+            // Discord Error Log
+            if (this.logger) {
+                await this.logger.logError('Steam Deck Check Fehler', error, 'Automatische Überprüfung');
+            }
+            
             await this.sendErrorNotification(error);
         }
     }
@@ -108,7 +180,14 @@ class SteamDeckScheduler {
                 .setTimestamp()
                 .setFooter({ text: 'Automatischer Steam Deck Checker' });
 
+            // Prüfe ob User gepingt werden sollen
+            let shouldPingUsers = false;
+            let messageContent = '';
+            
             if (steamDeckInfo.onSale) {
+                // Bei Angeboten immer pingen wenn onlyPingOnSale aktiviert ist
+                shouldPingUsers = this.config.onlyPingOnSale;
+                
                 embed.setColor('#00ff00')
                     .setDescription('🚨 **ALERT: Steam Deck ist im Angebot!** 🚨')
                     .addFields(
@@ -122,6 +201,9 @@ class SteamDeckScheduler {
                     embed.addFields({ name: '📢 Änderung', value: 'Gerade in den Angebot gekommen!', inline: false });
                 }
             } else {
+                // Nicht im Angebot - nur pingen wenn onlyPingOnSale deaktiviert ist
+                shouldPingUsers = !this.config.onlyPingOnSale;
+                
                 embed.setColor('#ff9900')
                     .setDescription('ℹ️ **Steam Deck ist nicht im Angebot**')
                     .addFields(
@@ -130,9 +212,41 @@ class SteamDeckScheduler {
                         { name: 'Link', value: '[Steam Store](https://store.steampowered.com/app/1675200/Steam_Deck/)', inline: false }
                     );
             }
+            
+            // Erstelle User- und Rollen-Pings falls aktiviert
+            if (shouldPingUsers && this.config.pingUsers && this.config.pingRoles) {
+                const pings = [];
+                
+                // User-Pings hinzufügen
+                if (this.config.pingUsers.length > 0) {
+                    const userPings = this.config.pingUsers.map(userId => `<@${userId}>`);
+                    pings.push(...userPings);
+                }
+                
+                // Rollen-Pings hinzufügen
+                if (this.config.pingRoles.length > 0) {
+                    const rolePings = this.config.pingRoles.map(roleId => `<@&${roleId}>`);
+                    pings.push(...rolePings);
+                }
+                
+                if (pings.length > 0) {
+                    messageContent = `${pings.join(' ')}\n🔔 **Steam Deck Update!**`;
+                }
+            }
 
-            await channel.send({ embeds: [embed] });
-            console.log('📨 Steam Deck Benachrichtigung gesendet');
+            // Sende Nachricht mit oder ohne Pings
+            const messageOptions = { embeds: [embed] };
+            if (messageContent) {
+                messageOptions.content = messageContent;
+            }
+            
+            await channel.send(messageOptions);
+            
+            const totalPings = (this.config.pingUsers?.length || 0) + (this.config.pingRoles?.length || 0);
+            const pingInfo = shouldPingUsers && totalPings > 0 
+                ? ` (${this.config.pingUsers?.length || 0} User + ${this.config.pingRoles?.length || 0} Rollen gepingt)` 
+                : '';
+            console.log(`📨 Steam Deck Benachrichtigung gesendet${pingInfo}`);
 
         } catch (error) {
             console.error('❌ Fehler beim Senden der Steam Deck Benachrichtigung:', error);
