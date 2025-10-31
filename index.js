@@ -10,6 +10,9 @@ const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 // Steam Deck Scheduler importieren
 const SteamDeckScheduler = require('./services/steamDeckScheduler.js');
 
+// Discord Logger importieren
+const DiscordLogger = require('./services/discordLogger.js');
+
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -28,15 +31,22 @@ exec('node backend/deployCommands.js', (err, stdout, stderr) => {
 
 
 // When the client is ready, run this code
-client.once(Events.ClientReady, c => {
+client.once(Events.ClientReady, async c => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
 	
-	// Steam Deck Scheduler temporär deaktiviert für Debugging
-	console.log('🎮 Steam Deck Scheduler ist temporär deaktiviert (Debug Mode)');
+	// Discord Logger initialisieren
+	const logger = new DiscordLogger(client);
+	client.logger = logger; // Für global access
 	
-	// TODO: Scheduler wieder aktivieren wenn Commands funktionieren
-	// const steamDeckScheduler = new SteamDeckScheduler(client);
-	// steamDeckScheduler.start("09:00");
+	// Bot Start loggen
+	await logger.logBotStart(c.user);
+	
+	// Steam Deck Scheduler aktiviert
+	console.log('🎮 Steam Deck Scheduler wird gestartet...');
+	await logger.info('Steam Deck Scheduler', 'Automatischer Steam Deck Checker wird gestartet...');
+	
+	const steamDeckScheduler = new SteamDeckScheduler(client);
+	steamDeckScheduler.start(); // Lädt Zeit aus Config
 });
 
 // Log in to Discord with your client's token

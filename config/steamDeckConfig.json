@@ -1,0 +1,10 @@
+{
+    "checkTime": "09:00",
+    "channelId": null,
+    "logChannelId": null,
+    "lastCheck": null,
+    "isActive": true,
+    "pingUsers": [],
+    "pingRoles": [],
+    "onlyPingOnSale": true
+}

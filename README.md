@@ -53,6 +53,7 @@ docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name server-bot \
 -e DISCORD_CLIENT_ID=your_client_id_here \
 -e DISCORD_GUILD_ID=your_guild_id_here \
 -e STEAM_DECK_CHANNEL_ID=your_channel_id_here \
+-e BOT_LOG_CHANNEL_ID=your_log_channel_id_here \
 sawell1/discord-bot:latest
 ```
 
@@ -71,6 +72,7 @@ services:
       - DISCORD_CLIENT_ID=your_client_id_here
       - DISCORD_GUILD_ID=your_guild_id_here
       - STEAM_DECK_CHANNEL_ID=your_channel_id_here
+      - BOT_LOG_CHANNEL_ID=your_log_channel_id_here
     restart: unless-stopped
 ```
 
@@ -114,6 +116,7 @@ The program will build an invite link with the correct permissions and put it in
 | `DISCORD_CLIENT_ID` | ✅ Yes | Your Discord application ID |
 | `DISCORD_GUILD_ID` | ⚠️ Recommended | Your Discord server ID (for faster command deployment) |
 | `STEAM_DECK_CHANNEL_ID` | ❌ Optional | Channel ID for Steam Deck notifications (enhanced features) |
+| `BOT_LOG_CHANNEL_ID` | ❌ Optional | Channel ID for bot logs (replaces Portainer log checking) |
 
 ---
 
