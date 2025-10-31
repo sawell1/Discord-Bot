@@ -22,8 +22,17 @@ This fork maintains full compatibility with the original bot while adding new fu
 - **Smart notifications** that alert only on price changes or new deals
 - **Real-time manual checking** with `/steamdeck` command
 - **Configurable Discord notifications** via channel setup
+- **Time configuration** - Set check time directly in Discord
+- **User & Role pings** - Notify specific users or entire roles
+- **Smart ping modes** - Only on sales or all checks
 
-###  Enhanced Stability
+### 🤖 Discord Logging System
+- **Real-time bot logs** directly in Discord channels
+- **Replaces Portainer log checking** - no more browser tabs needed
+- **Comprehensive monitoring** - startup, checks, errors, config changes
+- **Professional formatting** with Discord embeds and timestamps
+
+### 🔧 Enhanced Stability
 - **Improved error handling** and logging
 - **Robust timeout protection** for external API calls
 - **Extended configuration options** for better customization
@@ -104,7 +113,15 @@ The program will build an invite link with the correct permissions and put it in
 ### **🎮 Steam Deck Commands (Enhanced Features):**
 - **`/steamdeck`** - Real-time Steam Deck offer checker with price analysis
 - **`/steamdeck-config channel #channel`** - Set Discord channel for automatic notifications
-- **`/steamdeck-config status`** - View automatic monitoring system status
+- **`/steamdeck-config time HH:MM`** - Set automatic check time (e.g., 14:30)
+- **`/steamdeck-config ping-add-role @role`** - Add role for Steam Deck notifications
+- **`/steamdeck-config ping-add @user`** - Add individual user for notifications
+- **`/steamdeck-config ping-remove-role @role`** - Remove role from notifications
+- **`/steamdeck-config ping-remove @user`** - Remove user from notifications
+- **`/steamdeck-config ping-list`** - Show all configured notification targets
+- **`/steamdeck-config ping-mode`** - Configure when to send pings (only on sales vs all checks)
+- **`/steamdeck-config log-channel #channel`** - Set channel for bot logs (replaces Portainer)
+- **`/steamdeck-config status`** - Complete system overview and configuration status
 
 ---
 
@@ -123,19 +140,57 @@ The program will build an invite link with the correct permissions and put it in
 ## 🕐 Automatic Features
 
 ### Steam Deck Monitoring
-- **Daily automatic checks** at 09:00 AM for Steam Deck sales
+- **Daily automatic checks** at configurable time (default 09:00 AM)
 - **Smart notifications** that only alert on actual price changes or new deals
 - **Status change tracking** to avoid notification spam
+- **Role and user pings** for targeted notifications
+- **Configurable ping modes** - only on sales or all checks
+- **Error reporting** with automatic retry mechanisms
+
+### Discord Logging
+- **Real-time bot monitoring** directly in Discord
+- **Startup notifications** confirming bot is online
+- **Check results logging** for transparency
+- **Error reporting** with detailed stack traces
+- **Configuration change tracking** with user attribution
+- **Command usage logging** for monitoring and debugging
 - **Error reporting** with automatic retry mechanisms
 
 ---
 
-## 🐳 Docker Images
+## � Quick Setup Guide
+
+### Basic Setup (Core Features Only):
+1. Use `allenrkeen/server-bot` Docker image
+2. Set required environment variables: `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID`
+
+### Enhanced Setup (Steam Deck + Logging):
+1. Use `sawell1/discord-bot` Docker image
+2. Set basic environment variables
+3. **Configure Steam Deck monitoring:**
+   - `/steamdeck-config channel #steam-alerts` - Set notification channel
+   - `/steamdeck-config time 14:30` - Set check time
+   - `/steamdeck-config ping-add-role @SteamDeals` - Add role for notifications
+4. **Configure Discord logging:**
+   - `/steamdeck-config log-channel #bot-logs` - Replace Portainer log checking
+5. **Test setup:**
+   - `/steamdeck-config status` - View complete configuration
+   - `/steamdeck` - Manual check to test functionality
+
+### Recommended Workflow:
+1. Create Discord roles: `@SteamDeals`, `@BotAdmins`
+2. Create Discord channels: `#steam-alerts`, `#bot-logs`
+3. Configure bot with commands above
+4. Users can self-assign `@SteamDeals` role for notifications
+
+---
+
+## �🐳 Docker Images
 
 | Repository | Purpose | Maintained by |
 |------------|---------|---------------|
 | [`allenrkeen/server-bot`](https://hub.docker.com/r/allenrkeen/server-bot) | Original core functionality | allenrkeen |
-| [`sawell1/discord-bot`](https://hub.docker.com/r/sawell1/discord-bot) | Enhanced with Steam Deck features | sawell1 |
+| [`sawell1/discord-bot`](https://hub.docker.com/r/sawell1/discord-bot) | Enhanced with Steam Deck monitoring, Discord logging & advanced notifications | sawell1 |
 
 ---
 
